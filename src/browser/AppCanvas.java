@@ -3,7 +3,6 @@ package browser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
-
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import javax.microedition.lcdui.Font;
@@ -23,6 +22,7 @@ class AppCanvas extends GameCanvas {
     int h;
     int time = 0;
     Vector document = null;
+    Vector documentCache = null;
     boolean isLoading = false;
     boolean upPressed = false;
     boolean downPressed = false;
