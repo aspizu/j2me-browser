@@ -1,5 +1,0 @@
-package browser;
-
-class Cache {
-
-}
