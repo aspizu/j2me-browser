@@ -16,7 +16,7 @@ class GemtextParser {
             String line = extractLine(input, startIndex, endIndex).trim();
             startIndex = endIndex + 1; // Move past the newline character
 
-            if (line.equals("```")) {
+            if (line.startsWith("```")) {
                 inPre = handlePreformatted(inPre, preBuffer, doc);
                 continue;
             }
