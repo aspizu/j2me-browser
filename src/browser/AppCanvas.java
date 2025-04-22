@@ -7,6 +7,7 @@ import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
 import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.Image;
 import javax.microedition.lcdui.game.GameCanvas;
 
 class AppCanvas extends GameCanvas {
@@ -22,7 +23,7 @@ class AppCanvas extends GameCanvas {
     int h;
     int time = 0;
     Vector document = null;
-    Vector documentCache = null;
+    Image[] documentCache = null;
     boolean isLoading = false;
     boolean upPressed = false;
     boolean downPressed = false;
@@ -81,9 +82,6 @@ class AppCanvas extends GameCanvas {
     }
 
     void render() {
-        g.setColor(0x000000);
-        g.fillRect(0, 0, w, h);
-        
         if (document != null) {
         	document(document);
         }
@@ -96,27 +94,40 @@ class AppCanvas extends GameCanvas {
             String type = line.type;
             Font font = null;
             if (type.equals("heading")) {
-                g.setColor(0xFF0000);
                 font = headingFont;
             } else if (type.equals("link")) {
-                g.setColor(0x0000FF);
                 font = linkFont;
             } else if (type.equals("list_item")) {
-                g.setColor(0xFFFF00);
                 font = listItemFont;
             } else if (type.equals("paragraph")) {
-                g.setColor(0xFFFFFF);
                 font = paragraphFont;
             } else if (type.equals("preformatted")) {
-                g.setColor(0xCCCCCC);
                 font = preformattedFont;
             } else if (type.equals("quote")) {
-                g.setColor(0x00FF00);
                 font = quoteFont;
             }
-            g.setFont(font);
             if (0 <= (y + font.getHeight())) {
-            	g.drawString(line.text, 0, y, Graphics.TOP | Graphics.LEFT);
+            	if (documentCache[i] == null) {
+            		Image image = Image.createImage(w, font.getHeight());
+            		documentCache[i] = image;
+            		Graphics cg = image.getGraphics();
+            		if (type.equals("heading")) {
+                        cg.setColor(0xFF0000);
+                    } else if (type.equals("link")) {
+                        cg.setColor(0x0000FF);
+                    } else if (type.equals("list_item")) {
+                        cg.setColor(0xFFFF00);
+                    } else if (type.equals("paragraph")) {
+                        cg.setColor(0x212121);
+                    } else if (type.equals("preformatted")) {
+                        cg.setColor(0xCCCCCC);
+                    } else if (type.equals("quote")) {
+                        cg.setColor(0x00FF00);
+                    }
+            		cg.setFont(font);
+            		cg.drawString(line.text, 0, 0, Graphics.TOP|Graphics.LEFT);
+            	}
+            	g.drawImage(documentCache[i], 0, y, Graphics.TOP|Graphics.LEFT);
             }
             y += font.getHeight();
             if (y > h) {
@@ -345,5 +356,6 @@ class FetchDocumentThread extends Thread {
 			}
 		}
 		canvas.document = lines;
+		canvas.documentCache = new Image[lines.size()];
 	}
 }

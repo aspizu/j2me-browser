@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mtjMetadata jad="chatgpt.jad" version="2.0.1.201509042315">
+<mtjMetadata jad="browser.jad" version="2.0.1.201509042315">
    <device group="KEmulator nnmod" name="KEmulator"/>
    <signing projectSpecific="false" signProject="false">
       <alias/>
