@@ -1,0 +1,8 @@
+MIDlet-Vendor: aspizu
+MIDlet-Version: 1.0.0
+MicroEdition-Configuration: CLDC-1.1
+MIDlet-1: ChatGPT,,browser.Browser
+MIDlet-Name: Browser
+MicroEdition-Profile: MIDP-2.0
+MIDlet-Jar-URL: browser.jar
+MIDlet-Permissions: javax.microedition.io.Connector.http
