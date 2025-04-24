@@ -7,6 +7,7 @@ import java.util.TimeZone;
 import java.util.Vector;
 import javax.microedition.io.Connector;
 import javax.microedition.io.HttpConnection;
+import javax.microedition.lcdui.Display;
 import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Graphics;
 import javax.microedition.lcdui.Image;
@@ -31,6 +32,8 @@ class AppCanvas extends GameCanvas {
     Vector document = null;
     Image[] documentCache = null;
     boolean isLoading = false;
+    int loadingStartedAt = 0;
+    int loadingEndedAt = 0;
     boolean upPressed = false;
     boolean downPressed = false;
     boolean softLeftPressed = false;
@@ -43,6 +46,8 @@ class AppCanvas extends GameCanvas {
     int viewh;
     GemtextElement hoveredElement = null;
     Calendar cal;
+    UI ui;
+    boolean menuVisible = false;
 
     AppCanvas(Browser midlet) {
         super(false);
@@ -64,9 +69,9 @@ class AppCanvas extends GameCanvas {
         h = getHeight();
         viewh = h - 16;
         cursorImage = Image.createImage("/cursor.png");
-        isLoading = true;
         new FetchDocumentThread(this).start();
         history = new Vector();
+        ui = new UI(this, Display.getDisplay(midlet), w, h, g);
         while (true) {
             update();
             render();
@@ -79,6 +84,9 @@ class AppCanvas extends GameCanvas {
     }
 
     void update() {
+    	if (menuVisible) {
+    		return;
+    	}
         if (document != null) {
             isLoading = false;
         }
@@ -127,6 +135,10 @@ class AppCanvas extends GameCanvas {
     }
 
     void render() {
+    	if (menuVisible) {
+    		renderMenu();
+    		return;
+    	}
     	g.setColor(0xFFFFFF);
     	g.fillRect(0, 0, w, viewh);
         if (document != null) {
@@ -154,11 +166,33 @@ class AppCanvas extends GameCanvas {
         	g.setColor(0x888888);
         }
         g.drawString("Back", w - softKeyWidth/2 + menuFont.stringWidth("Back")/2, h-8-menuFont.getHeight()/2, Graphics.TOP|Graphics.RIGHT);
-        String time = getTime();
+        String timeStr = getTime();
         g.setColor(0x888888);
-        g.drawString(time, w/2 + menuFont.stringWidth(time)/2, h-8-menuFont.getHeight()/2, Graphics.TOP|Graphics.RIGHT);
+        g.drawString(timeStr, w/2 + menuFont.stringWidth(timeStr)/2, h-8-menuFont.getHeight()/2, Graphics.TOP|Graphics.RIGHT);
+        
+        g.setColor(0xAA0000);
+        
+        
+        
+        int barx = isLoading ? (time - loadingStartedAt) : (time - loadingStartedAt) + (time - loadingEndedAt)*(time - loadingStartedAt);
+        
+        if (barx >= w) {
+        	loadingEndedAt = 0;
+        }
+        
+        if (isLoading || loadingEndedAt != 0) {
+        	g.fillRect(0, 0, barx, 2);        	
+        }
         
         g.drawImage(cursorImage, w/4, cursorY - scrollY, Graphics.TOP|Graphics.LEFT);
+    }
+    
+    void renderMenu() {
+    	ui.beginMenu("root");
+    	if (ui.button("Back")) {
+    		menuVisible = false;
+    	}
+    	ui.endMenu();
     }
     
     String getTime() {
@@ -261,6 +295,10 @@ class AppCanvas extends GameCanvas {
     }
 
     protected void keyPressed(int keyCode) {
+    	if (menuVisible) {
+    		ui.keyPressed(keyCode);
+    		return;
+    	}
         int action = getGameAction(keyCode);
         if (action == GameCanvas.UP) {
         	upPressed = true;
@@ -289,13 +327,15 @@ class AppCanvas extends GameCanvas {
     }
     
     void navigate(String url) {
-    	isLoading = true;
 		history.addElement(this.url);
 		this.url = url;
 		new FetchDocumentThread(this).start();
     }
     
     protected void keyReleased(int keyCode) {
+    	if (menuVisible) {
+    		return;
+    	}
     	int action = getGameAction(keyCode);
     	if (action == GameCanvas.UP) {
     		upPressed = false;
@@ -303,6 +343,7 @@ class AppCanvas extends GameCanvas {
     		downPressed = false;
     	} else if (keyCode == -6) {
     		softLeftPressed = false;
+    		menuVisible = true;
     	} else if (keyCode == -7) {
     		softRightPressed = false;
     		navigateBack();
@@ -408,10 +449,13 @@ class FetchDocumentThread extends Thread {
 	AppCanvas canvas;
 	
 	FetchDocumentThread(AppCanvas canvas) {
-		this.canvas = canvas; 
+		this.canvas = canvas;
 	}
 	
 	public void run() {
+		canvas.isLoading = true;
+		canvas.loadingStartedAt = canvas.time;
+		canvas.loadingEndedAt = 0;
 		String text = null;
 		try {
 			text = canvas.gemget(canvas.url);
@@ -500,5 +544,6 @@ class FetchDocumentThread extends Thread {
 		canvas.cursorY = 0;
 		canvas.documentHeight = 0;
 		canvas.cursorVel = 0;
+		canvas.loadingEndedAt = canvas.time;
 	}
 }
